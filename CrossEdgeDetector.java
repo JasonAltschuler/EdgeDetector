@@ -5,7 +5,7 @@
  *
  * PURPOSE: Edge detector
  *
- * ALGORITHM: Sobel edge detector algorithm
+ * ALGORITHM: Cross edge detector algorithm
  *
  * For full documentation, see readme
   ************************************************************************/
@@ -24,18 +24,14 @@ import ui.ImageViewer;
 import util.Threshold;
 
 
-public class SobelEdgeDetector extends GaussianEdgeDetector {
+public class CrossEdgeDetector extends GaussianEdgeDetector {
    
    /*********************************************************************
     * Convolution kernels
     *********************************************************************/
-   private final static double[][] X_kernel = {{-1, 0, 1},
-                                               {-2, 0, 2},
-                                               {-1, 0, 1}};
+   private final static double[][] X_kernel = {{1, 0}, {0, -1}};
 
-   private final static double[][] Y_kernel = {{1, 2, 1}, 
-                                               {0, 0, 0},
-                                               {-1, -2, -1}};
+   private final static double[][] Y_kernel = {{0, 1}, {-1, 0}};
 
    /*********************************************************************
     * Implemented abstract methods
@@ -46,7 +42,7 @@ public class SobelEdgeDetector extends GaussianEdgeDetector {
     * {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
     */
    public double[][] getXkernel() {
-      return SobelEdgeDetector.X_kernel;
+      return CrossEdgeDetector.X_kernel;
    }
    
    /**
@@ -54,7 +50,7 @@ public class SobelEdgeDetector extends GaussianEdgeDetector {
     * {{1, 2, 1}, {0, 0, 0}, {-1, -2, -1}}
     */
    public double[][] getYkernel() {
-      return SobelEdgeDetector.Y_kernel;
+      return CrossEdgeDetector.Y_kernel;
    }
 
    
@@ -66,7 +62,7 @@ public class SobelEdgeDetector extends GaussianEdgeDetector {
     * All work is done in constructor.
     * @param image
     */
-   public SobelEdgeDetector(int[][] image) {
+   public CrossEdgeDetector(int[][] image) {
       run(image);
    }
 
@@ -76,8 +72,6 @@ public class SobelEdgeDetector extends GaussianEdgeDetector {
     * @throws IOException 
     *********************************************************************/
 
-   // TODO: refactor; make this a generic method
-   
    public static void main(String[] args) throws IOException {
       // read image and get pixels
       String img = args[0];
@@ -86,7 +80,7 @@ public class SobelEdgeDetector extends GaussianEdgeDetector {
 
       // run SobelEdgeDetector
       final long startTime = System.currentTimeMillis();
-      SobelEdgeDetector sed = new SobelEdgeDetector(pixels);
+      CrossEdgeDetector sed = new CrossEdgeDetector(pixels);
       final long endTime = System.currentTimeMillis();
 
       // print timing information
@@ -98,7 +92,7 @@ public class SobelEdgeDetector extends GaussianEdgeDetector {
       boolean[][] edges = sed.getEdges();
       BufferedImage edges_image = Threshold.applyThresholdReversed(edges);
       BufferedImage[] toShow = {originalImage, edges_image};
-      String title = "Sobel Edge Detector by Jason Altschuler";
+      String title = "Cross Edge Detector by Jason Altschuler";
       ImageViewer.showImages(toShow, title);
    }
 
