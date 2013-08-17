@@ -7,7 +7,7 @@
  *
  * ALGORITHM: Sobel edge detector algorithm
  *
- * For full documentation, see readme
+ * For full documentation, see the README
   ************************************************************************/
 
 package edgedetector;

@@ -7,7 +7,7 @@
  *
  * ALGORITHM: Cross edge detector algorithm
  *
- * For full documentation, see readme
+ * For full documentation, see the README
   ************************************************************************/
 
 package edgedetector;
@@ -85,7 +85,7 @@ public class CrossEdgeDetector extends GaussianEdgeDetector {
 
       // print timing information
       final double elapsed = (double) (endTime - startTime) / 1000;
-      System.out.println("Sobel Edge Detector took " + elapsed + " seconds.");
+      System.out.println("Cross Edge Detector took " + elapsed + " seconds.");
       System.out.println("Threshold = " + sed.threshold);
 
       // display edges
