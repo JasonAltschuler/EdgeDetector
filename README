@@ -1,1 +1,54 @@
-// TODO: I'll write something eventually. 
+// TODO: actually write something useful
+
+/**********************************************************************
+* @author Jason Altschuler
+*
+* Description of EdgeDetectors
+**********************************************************************/
+
+  ** PURPOSE: Detect edges in images 
+
+  ** OVERVIEW OF ALGORITHM(S): This repo actually has many (> 5 and growing)
+   different edge detection algorithms. These can all  be roughly subclassed
+   into broad categories:
+      1. Gaussian Edge Detection: use 1st derivatives. 
+           Roughly: find (i, j) s.t.|f'(i, j) > Threshold
+      2. Laplacian Edge Detection: use 2nd derivatives
+           Roughly: find (i, j) s.t. |f''(i, j)| ~= 0 // TODO: check this
+   In general, edges are (often) the pixels where the sharpest
+   increase or decrease in intensity are found.
+
+  ** OVERVIEW:
+     - Step 1: Randomly chooses without replacement k (# of clusters)
+      data points to be initial centroids, either by basic random
+      sampling or by KMeans++ (described below).
+     - Step 2: Cluster multiple times. Clustering consists of two 
+      repeating alternating steps.
+       - Step 2a: Assignment step: assign points  to nearest centroids.
+       - Step 2b: Update step: recalculate centroids based on assignments.
+         - Steps 2a and 2b are repeated until the marginal improvement
+         in WCSS (the cost function) is less than 'epsilon' (provided
+         by user, or default = .001).
+     - Step 3: Choose the clustering with the lowest WCSS.
+
+
+// TODO: provide in-depth descriptions of each algorithm
+
+
+// TODO: provide description of parameters, data structures, and output
+
+
+  ** EXAMPLE RUN:
+String filePath = User.provideImage();          // you need to provide
+
+SobelEdgeDetector sed = new SobelEdgeDetector(filePath);
+
+boolean[][] edges = sed.getEdges();             // get the edges
+
+User.do_something_awesome_with_the_data();      // enjoy!
+
+
+  ** SUGGESTED READINGS: // TODO
+   1. 
+   2.
+   3.
