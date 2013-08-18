@@ -43,7 +43,7 @@ public class SobelEdgeDetector extends GaussianEdgeDetector {
 
    /**
     * @Override
-    * {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
+    * {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}}
     */
    public double[][] getXkernel() {
       return SobelEdgeDetector.X_kernel;
@@ -61,6 +61,21 @@ public class SobelEdgeDetector extends GaussianEdgeDetector {
    /*********************************************************************
     * Constructor 
     **********************************************************************/
+   
+   /**
+    * All work is done in constructor.
+    * @param filePath path to image
+    */
+   public SobelEdgeDetector(String filePath) {
+      // read image and get pixels
+      BufferedImage originalImage;
+      try {
+         originalImage = ImageIO.read(new File(filePath));
+         run(Grayscale.getGrayPixels(originalImage));
+      } catch (IOException e) {
+         e.printStackTrace();
+      }
+   }
    
    /**
     * All work is done in constructor.
