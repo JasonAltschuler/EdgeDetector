@@ -1,15 +1,3 @@
-/**************************************************************************
- * @author Jason Altschuler
- *
- * @tags edge detection, image analysis, computer vision, AI, machine learning
- *
- * PURPOSE: Edge detector
- *
- * ALGORITHM: Prewitt edge detector algorithm
- *
- * For full documentation, see the README
-  ************************************************************************/
-
 package edgedetector;
 
 import grayscale.Grayscale;
@@ -24,18 +12,16 @@ import ui.ImageViewer;
 import util.Threshold;
 
 
-public class PrewittEdgeDetector extends GaussianEdgeDetector {
+public class RobertsCrossEdgeDetector extends GaussianEdgeDetector {
    
    /*********************************************************************
     * Convolution kernels
     *********************************************************************/
-   private final static double[][] X_kernel = {{-1, 0, 1},
-                                               {-1, 0, 1},
-                                               {-1, 0, 1}};
+   private final static double[][] X_kernel = {{1, 0},
+                                               {0, -1}};
 
-   private final static double[][] Y_kernel = {{1, 1, 1},
-                                               {0, 0, 0},
-                                               {-1, -1, -1}};
+   private final static double[][] Y_kernel = {{0, -1},
+                                               {1, 0}};
 
    /*********************************************************************
     * Implemented abstract methods
@@ -43,18 +29,18 @@ public class PrewittEdgeDetector extends GaussianEdgeDetector {
 
    /**
     * @Override
-    * {{-1, 0, 1}, {-1, 0, 1}, {-1, 0, 1}}
+    * {{1, 0}, {0, -1}}
     */
    public double[][] getXkernel() {
-      return PrewittEdgeDetector.X_kernel;
+      return RobertsCrossEdgeDetector.X_kernel;
    }
    
    /**
     * @Override
-    * {{1, 1, 1}, {0, 0, 0}, {-1, -1, -1}}
+    * {{0, -1}, {1, 0}}
     */
    public double[][] getYkernel() {
-      return PrewittEdgeDetector.Y_kernel;
+      return RobertsCrossEdgeDetector.Y_kernel;
    }
 
    
@@ -66,7 +52,7 @@ public class PrewittEdgeDetector extends GaussianEdgeDetector {
     * All work is done in constructor.
     * @param image
     */
-   public PrewittEdgeDetector(int[][] image) {
+   public RobertsCrossEdgeDetector(int[][] image) {
       run(image);
    }
 
@@ -84,19 +70,19 @@ public class PrewittEdgeDetector extends GaussianEdgeDetector {
 
       // run SobelEdgeDetector
       final long startTime = System.currentTimeMillis();
-      PrewittEdgeDetector sed = new PrewittEdgeDetector(pixels);
+      RobertsCrossEdgeDetector sed = new RobertsCrossEdgeDetector(pixels);
       final long endTime = System.currentTimeMillis();
 
       // print timing information
       final double elapsed = (double) (endTime - startTime) / 1000;
-      System.out.println("Prewitt Edge Detector took " + elapsed + " seconds.");
+      System.out.println("Roberts Edge Detector took " + elapsed + " seconds.");
       System.out.println("Threshold = " + sed.threshold);
 
       // display edges
       boolean[][] edges = sed.getEdges();
       BufferedImage edges_image = Threshold.applyThresholdReversed(edges);
       BufferedImage[] toShow = {originalImage, edges_image};
-      String title = "Prewitt Edge Detector by Jason Altschuler";
+      String title = "Roberts Edge Detector by Jason Altschuler";
       ImageViewer.showImages(toShow, title);
    }
 

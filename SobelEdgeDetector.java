@@ -71,7 +71,7 @@ public class SobelEdgeDetector extends GaussianEdgeDetector {
       BufferedImage originalImage;
       try {
          originalImage = ImageIO.read(new File(filePath));
-         run(Grayscale.getGrayPixels(originalImage));
+         run(Grayscale.imgToGrayPixels(originalImage));
       } catch (IOException e) {
          e.printStackTrace();
       }
@@ -97,7 +97,7 @@ public class SobelEdgeDetector extends GaussianEdgeDetector {
       // read image and get pixels
       String img = args[0];
       BufferedImage originalImage = ImageIO.read(new File(img));
-      int[][] pixels = Grayscale.getGrayPixels(originalImage);
+      int[][] pixels = Grayscale.imgToGrayPixels(originalImage);
 
       // run SobelEdgeDetector
       final long startTime = System.currentTimeMillis();
