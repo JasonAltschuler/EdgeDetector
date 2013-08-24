@@ -19,19 +19,6 @@
    increase or decrease in intensity are found.
 
   ** OVERVIEW:
-     - Step 1: Randomly chooses without replacement k (# of clusters)
-      data points to be initial centroids, either by basic random
-      sampling or by KMeans++ (described below).
-     - Step 2: Cluster multiple times. Clustering consists of two 
-      repeating alternating steps.
-       - Step 2a: Assignment step: assign points  to nearest centroids.
-       - Step 2b: Update step: recalculate centroids based on assignments.
-         - Steps 2a and 2b are repeated until the marginal improvement
-         in WCSS (the cost function) is less than 'epsilon' (provided
-         by user, or default = .001).
-     - Step 3: Choose the clustering with the lowest WCSS.
-
-
 // TODO: provide in-depth descriptions of each algorithm
 
 
