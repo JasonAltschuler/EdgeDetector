@@ -57,8 +57,8 @@ public abstract class GaussianEdgeDetector {
       ImageConvolution y_ic = new ImageConvolution(image, y_kernel);
 
       // calculate magnitude of gradients
-      int[][] x_imageConvolution = x_ic.getImageConvolution();
-      int[][] y_imageConvolution = y_ic.getImageConvolution();
+      int[][] x_imageConvolution = x_ic.getConvolvedImage();
+      int[][] y_imageConvolution = y_ic.getConvolvedImage();
 
       // note that smoothed image have slightly different dimensions than original image (because image convolution)
       int rows = x_imageConvolution.length;

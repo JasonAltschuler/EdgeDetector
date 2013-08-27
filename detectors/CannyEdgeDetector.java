@@ -16,15 +16,12 @@
  *       1. Gaussian smoothing / Gaussian blurring (for noise reduction)
  *       2. Calculate magnitude of gradient and edge angle for each pixel
  *       3. Non-maximum suppression (removes false edges)
- *       4. Hysteresis thresholding (calculate two thresholds --> weak and strong edges)
+ *       4. Hysteresis  ing (calculate two thresholds --> weak and strong edges)
  *       5. Edge tracing (keep strong edges and all weak edges connected to strong edges)
  **************************************************************************/
 
 package edgedetector.detectors;
 
-// TODO: use this as a reference / resource:
-// http://www.cse.iitd.ernet.in/~pkalra/csl783/canny.pdf
-// http://dasl.mem.drexel.edu/alumni/bGreen/www.pages.drexel.edu/_weg22/can_tut.html
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -35,46 +32,63 @@ import java.util.Stack;
 import javax.imageio.ImageIO;
 
 import kmeans.KMeans;
-import edgedetector.imagederivatives.ImageConvolution;
-import edgedetector.util.NonMaximumSuppression;
-import grayscale.Grayscale;
 import ui.ImageViewer;
 import util.CSVwriter;
 import util.Hypotenuse;
 import util.Threshold;
+import edgedetector.imagederivatives.ImageConvolution;
+import edgedetector.util.NonMaximumSuppression;
+import grayscale.Grayscale;
+
 
 public class CannyEdgeDetector {
    
    /***********************************************************************
     * Static fields
     **********************************************************************/
+  
+   // convolution kernel for Gaussian smoothing / blurring (kernel width (sigma) = 1.4, kernel size = 5)
+   private static final double[][] GAUSSIAN_KERNEL = {{2/159.0, 4/159.0 , 5/159.0 , 4/159.0 , 2/159.0},
+                                                      {4/159.0, 9/159.0 , 12/159.0, 9/159.0 , 4/159.0}, 
+                                                      {5/159.0, 12/159.0, 15/159.0, 12/159.0, 5/159.0}, 
+                                                      {4/159.0, 9/159.0 , 12/159.0, 9/159.0 , 4/159.0}, 
+                                                      {2/159.0, 4/159.0 , 5/159.0 , 4/159.0 , 2/159.0}};
 
    // convolution kernels to calculate discrete image gradient (Sobel operators; same as in SobelEdgeDetector.java)
-   private static final double[][] X_KERNEL = {{-1, 0, 1},
-                                               {-2, 0, 2},
-                                               {-1, 0, 1}};
-   private static final double[][] Y_KERNEL = {{1, 2, 1}, 
-                                               {0, 0, 0},
+   private static final double[][] X_KERNEL = {{-1, 0 ,  1},
+                                               {-2, 0 ,  2},
+                                               {-1, 0 ,  1}};
+   private static final double[][] Y_KERNEL = {{1 , 2 ,  1}, 
+                                               {0 , 0 ,  0},
                                                {-1, -2, -1}};
+   
 
    /***********************************************************************
-    * Non-static data structures
+    * Non-static fields
     **********************************************************************/
    
    //=========================== PARAMETERS =============================/
-   // radius of kernel for Gaussian smoothing. Bigger --> _______________
-   private double kernelRadius;
    
    // true -> use L1 distance function. false -> use L2. L1 is less precise, but faster.
    private boolean L1norm;
    
+   // TODO: provide option for user to define kernelRadius and then calculate appropriate Gaussian Kernel
+   // radius of kernel for Gaussian smoothing. Bigger --> wider edges, smoother edges, more noise ignored
+// private double kernelRadius;
+   
    //======================= OPTIONAL PARAMETERS =========================/
+   
+   // false --> user provides high and low thresholds. true --> calculate thresholds automatically
+   private boolean calcThreshold;
    
    // calculated and used in hysteresis: strong edges have gradient magnitudes above high threshold
    private int highThreshold;
    
    // calculated and used in hysteresis: weak edges have gradient magnitudes between low and high threshold
    private int lowThreshold;
+   
+   // minimum number of pixels for an edge to contain to be kept
+   private int minEdgeSize;
 
    //============================== OUTPUT ===============================/
 
@@ -91,88 +105,160 @@ public class CannyEdgeDetector {
    private int numEdgePixels;
    
    // number of strong edge pixels
-   private int strongEdgePixels;
+   private int numStrongEdgePixels;
    
    // number of weak edge pixels
-   private int weakEdgePixels;
- 
+   private int numWeakEdgePixels;
+   
+   // dimensions of edges[][]] image; slightly smaller than original image because of image convolution
+   private int rows;
+   private int columns;
 
    
    /***********************************************************************
     * Constructor
     **********************************************************************/
    
-   // TODO: builder class?
-
-   public CannyEdgeDetector(int[][] image, double kernelRadius) {      
-      this.kernelRadius = kernelRadius;
-
-      run(image);
+   /**
+    * Empty constructor is private to ensure that clients have to use the 
+    * Builder inner class to create a CannyEdgeDetector object.
+    */
+   private CannyEdgeDetector() {}
+   
+   /**
+    * The proper way to construct a CannyEdgeDetector object: from an inner class object.
+    * <P> All work is done in constructor.
+    * @param builder
+    */
+   private CannyEdgeDetector(Builder builder) {
+      // set user information from builder
+      this.L1norm = builder.L1norm;
+      this.minEdgeSize = builder.minEdgeSize;
+      if (!(this.calcThreshold = builder.calcThreshold)) {
+         this.lowThreshold = builder.lowThreshold;
+         this.highThreshold = builder.highThreshold;
+      }
+      
+      // run KMeans++ clustering algorithm
+      findEdges(builder.image);
    }
+   
+   /**
+    * Builder class for constructing KMeans objects.
+    *
+    * For descriptions of the fields in this (inner) class, see outer class
+    */
+   public static class Builder {
+      
+      //============================ FIELDS =============================//
+      
+      // required parameters
+      private int[][] image;
+      
+      // optional parameters (default values given)
+      private boolean calcThreshold = true;
+      private int lowThreshold;
+      private int highThreshold;
+      private boolean L1norm = false;
+      private int minEdgeSize = 0;
+      
+      
+      //=========================== CONSTRUCTOR =========================//
 
+      /**
+       * Provide the required parameters.
+       * @param image
+       */
+      public Builder(int[][] image) {
+         this.image = image;
+      }
+      
+      /**
+       * Set high and low thresholds.
+       * @param lowThreshold
+       * @param highThreshold
+       * @return
+       */
+      public Builder thresholds(int lowThreshold, int highThreshold) {
+         if (lowThreshold > highThreshold || lowThreshold < 0 || highThreshold > 255)
+            throw new IllegalArgumentException("Invalid threshold values");
+         this.calcThreshold = false;
+         this.lowThreshold = lowThreshold;
+         this.highThreshold = highThreshold;
+         return this;
+      }
+      
+      /**
+       * Set whether to use L1 or L2 norm.
+       * @param L1norm
+       * @return
+       */
+      public Builder L1norm(boolean L1norm) {
+         this.L1norm = L1norm;
+         return this;
+      }
+      
+      /**
+       * Set the minimum number of pixels an edge must contain to be kept.
+       * @param minEdgeSize
+       * @return
+       */
+      public Builder minEdgeSize(int minEdgeSize) {
+         this.minEdgeSize = minEdgeSize = 0;
+         return this;
+      }
+      
+      /**
+       * Builds a CannyEdgeDetector object.
+       * @return
+       */
+      public CannyEdgeDetector build() {
+         return new CannyEdgeDetector(this);
+      }
+   }
 
    /***********************************************************************
     * Canny's Edge Detection method -- the algorithm itself
     ***********************************************************************/
 
    /**
-    * Canny's Edge Detection algorithm
+    * Canny's Edge Detection algorithm.
+    * <P> Finds only the most beautiful edges.
     * @param image
     */
-   private void run(int[][] image) {
+   private void findEdges(int[][] image) {
      
-      //================== STEP 1: GAUSSIAN SMOOTHING ====================/
+      //================== STEP 1: GAUSSIAN SMOOTHING ===================//
 
-      // TODO: implement this
-//      int kernel_rows = 5;
-//      int kernel_columns = 5;
-//      double[][] gaussianKernel = GaussianKernel.generate(kernelWidth); 
-      double[][] gaussianKernel = {{2, 4, 5, 4, 2},  // this is the kernel from the Wikipedia page on Canny Edge Detection
-                                   {4, 9, 12, 9, 4}, 
-                                   {5, 12, 15, 12, 5}, 
-                                   {4, 9, 12, 9, 4}, 
-                                   {2, 4, 5, 4, 2}};
-      for (int i = 0; i < 5; i++)
-         for (int j = 0; j < 5; j++)
-            gaussianKernel[i][j] /= 159.0;
+      ImageConvolution gaussianConvolution = new ImageConvolution(image, GAUSSIAN_KERNEL);
+      int[][] smoothedImage = gaussianConvolution.getConvolvedImage();      
       
       
-      
-      
-      
-      
-      ImageConvolution gaussianConvolution = new ImageConvolution(image, gaussianKernel);
-      int[][] smoothedImage = gaussianConvolution.getImageConvolution();
-      
-      
-      //===================== STEP 2: IMAGE GRADIENT =====================/
+      //===================== STEP 2: IMAGE GRADIENT ====================//
       
       // apply convolutions to smoothed image
       ImageConvolution x_ic = new ImageConvolution(smoothedImage, X_KERNEL);
       ImageConvolution y_ic = new ImageConvolution(smoothedImage, Y_KERNEL);
       
       // calculate magnitude of gradients
-      int[][] x_imageConvolution = x_ic.getImageConvolution();
-      int[][] y_imageConvolution = y_ic.getImageConvolution();
+      int[][] x_imageConvolution = x_ic.getConvolvedImage();
+      int[][] y_imageConvolution = y_ic.getConvolvedImage();
       
-      // note that the image convolutions have slightly different dimensions that original image
-      int rows = x_imageConvolution.length;
-      int columns = x_imageConvolution[0].length;
+      // note: image convolutions have slightly different dimensions that original image
+      rows = x_imageConvolution.length;
+      columns = x_imageConvolution[0].length;
       
       // calculate magnitude of gradient and tangent angle to edge
       int[][] mag = new int[rows][columns];
       NonMaximumSuppression.EdgeDirection[][] angle = new NonMaximumSuppression.EdgeDirection[rows][columns];
-      for (int i = 0; i < rows; i++) {
+      for (int i = 0; i < rows; i++)
          for (int j = 0; j < columns; j++) {
-            mag[i][j] = (int) (L1norm ? Hypotenuse.L1(x_imageConvolution[i][j], y_imageConvolution[i][j]) :
-                                        Hypotenuse.L2(x_imageConvolution[i][j], y_imageConvolution[i][j]));
-            angle[i][j] = NonMaximumSuppression.EdgeDirection.getDirection(x_imageConvolution[i][j], 
-                                                                           y_imageConvolution[i][j]);
+            mag[i][j] = hypotenuse(x_imageConvolution[i][j], y_imageConvolution[i][j]);
+            angle[i][j] = direction(x_imageConvolution[i][j], y_imageConvolution[i][j]);
          }
-      }
       
       
-      //================ STEP 3: NON-MAXIMUM SUPPRESSION =================/
+      //================ STEP 3: NON-MAXIMUM SUPPRESSION ================//
 
       edges = new boolean[rows][columns];
       weakEdges = new boolean[rows][columns];
@@ -185,92 +271,75 @@ public class CannyEdgeDetector {
                mag[i][j] = 0;
 
       
-      //======================= STEP 4: HYSTERESIS =======================/
+      //======================= STEP 4: HYSTERESIS ======================//
+      
+      // calculate high and low thresholds if user did not provide
+      if (calcThreshold) {
+         // TODO: implement other automated hysteresis algorithms
+         
+         // run KMeans++ clustering with 3 clusters (because 2 thresholds) 
+         // in 1 dimension using magnitudes of gradient
+         int k = 3; 
+         double[][] points = new double[rows * columns][1];
+         int counter = 0;
+         for (int i = 0; i < rows; i++)
+            for (int j = 0; j < columns; j++)
+               points[counter++][0] = mag[i][j];
 
-      // calculate two thresholds: high and low
-      
-      // TODO: only do if thresholds not given by user
-      // TODO: other methods (see image analysis book)
-      
-      // run KMeans++ clustering with 3 clusters in 1 dimensions using magnitudes of gradient
-//      int k = 3; // two thresholds --> three clusters
-//      double[][] points = new double[rows * columns][1];
-//      int counter = 0;
-//      for (int i = 0; i < rows; i++)
-//         for (int j = 0; j < columns; j++)
-//            points[counter++][0] = mag[i][j];
-//      
-//      KMeans clustering = new KMeans.Builder(k, points)
-//                                    .iterations(20)
-//                                    .pp(true)
-//                                    .epsilon(.001)
-//                                    .useEpsilon(true)
-//                                    .build();
-//      double[][] centroids = clustering.getCentroids();
-//      
-//      boolean b = centroids[0][0] < centroids[1][0];
-//      
-//      lowThreshold = (int) (b ? centroids[0][0] : centroids[1][0]);
-//      highThreshold = (int) (b ? centroids[1][0] : centroids[0][0]);    
+         KMeans clustering = new KMeans.Builder(k, points)
+                                       .iterations(10)
+                                       .pp(true)
+                                       .epsilon(.01)
+                                       .useEpsilon(true)
+                                       .build();
+         double[][] centroids = clustering.getCentroids();
+
+         boolean b = centroids[0][0] < centroids[1][0];
+         lowThreshold = (int) (b ? centroids[0][0] : centroids[1][0]);
+         highThreshold = (int) (b ? centroids[1][0] : centroids[0][0]);    
+      }
 
       
-      lowThreshold = 10;
-      highThreshold = 20;
-      
-      // delete later
-      System.out.println("Low threshold = " + lowThreshold);
-      System.out.println("High threshold = " + highThreshold);
-      System.out.println();
-      
-      
-     
-      
+      //====================== STEP 5: EDGE TRACING =====================//
 
-      //====================== STEP 5: EDGE TRACING ======================/
-      
       // data structures to help with DFS in edge tracing
       HashSet<Integer> strongSet = new HashSet<Integer>();
       HashSet<Integer> weakSet = new HashSet<Integer>();
-      
+
       // find strong and weak edges
-      int counter = 0;
-      weakEdgePixels = 0;
-      strongEdgePixels = 0;
+      int index = 0;
+      numWeakEdgePixels = 0;
+      numStrongEdgePixels = 0;
       for (int r = 0; r < rows; r++) {
          for (int c = 0; c < columns; c++) {
             if (mag[r][c] >= highThreshold) {
-               strongSet.add(counter);
+               strongSet.add(index);
                strongEdges[r][c] = true;
-               strongEdgePixels++;
-            }
-            else if (mag[r][c] >= lowThreshold) {
-               weakSet.add(counter);
+               numStrongEdgePixels++;
+            } else if (mag[r][c] >= lowThreshold) {
+               weakSet.add(index);
                weakEdges[r][c] = true;
-               weakEdgePixels++;
+               numWeakEdgePixels++;
             }
-            counter++;
+            index++;
          }
       }
       
-      // delete later
-      System.out.println("# of total pixels = " + (rows * columns));
-      System.out.println("# of strong edges = " + strongSet.size());
-      System.out.println("# of weak edges = " + weakSet.size());
-      
-      
       // if false --> not checked. if true --> checked
-      boolean[][] checked = new boolean[rows][columns];
+      boolean[][] marked = new boolean[rows][columns];
+      Stack<Integer> toAdd = new Stack<Integer>();
       
-      for (int index : strongSet) {
-         int[] indices = ind2sub(index, columns);
-         int r = indices[0];
-         int c = indices[1];
-         dfs(r, c, weakSet, strongSet, rows, columns, checked);
+      // depth-first search to track all contiguous edge segments, each consisting
+      // of weak edge pixels and at least 1 strong edge pixel
+      for (int strongIndex : strongSet) {
+         dfs(ind2sub(strongIndex, columns)[0], ind2sub(strongIndex, columns)[1], weakSet, strongSet, marked, toAdd);
+         
+         if (toAdd.size() >= minEdgeSize)
+            for (int edgeIndex : toAdd)
+               edges[ind2sub(edgeIndex, columns)[0]][ind2sub(edgeIndex, columns)[1]] = true;
+         
+         toAdd.clear();
       }
-      
-      // delete later
-      System.out.println();
-      System.out.println("# of edges (at end) = " + numEdgePixels);
    }
    
    
@@ -278,40 +347,39 @@ public class CannyEdgeDetector {
     * Depth-first-search for edge tracking.
     * @param r
     * @param c
-    * @param weakEdges
-    * @param strongEdges
-    * @param edge_stack
-    * @param rows
-    * @param columns
-    * @param checked
+    * @param weakSet HashSet of indices of all weak edges
+    * @param strongSet HashSet of indices of all strong edges
+    * @param marked boolean[][] to avoid double-checking pixels
+    * @param toAdd possible edges (must still check edge contains >= minEdgeSize # of pixels)
     */
-   private void dfs(int r, int c, HashSet<Integer> weakEdges, HashSet<Integer> strongEdges, int rows, int columns, boolean[][] checked) {
+   private void dfs(int r, int c, HashSet<Integer> weakSet, HashSet<Integer> strongSet, boolean[][] marked, Stack<Integer> toAdd) {
       // check indices still in bounds and haven't already checked this point
-      if (r < 0 || r >= rows || c < 0 || c >= columns || checked[r][c])
+      if (r < 0 || r >= rows || c < 0 || c >= columns || marked[r][c])
          return;
 
       // mark so that we don't come back
-      checked[r][c] = true;
+      marked[r][c] = true;
       
       int index = sub2ind(r, c, columns);
-      if (weakEdges.contains(index) || strongEdges.contains(index)) {
-         // mark as edge if connected to weak or strong edge
-         edges[r][c] = true;
+      if (weakSet.contains(index) || strongSet.contains(index)) {
+         // mark as possible edge (must also have >= minEdgeSize # of pixels)
+         toAdd.push(sub2ind(r, c, columns));
          
          // continue depth first search
-         dfs(r - 1, c - 1, weakEdges, strongEdges, rows, columns, checked);
-         dfs(r - 1, c, weakEdges, strongEdges, rows, columns, checked);
-         dfs(r - 1, c + 1, weakEdges, strongEdges, rows, columns, checked);
-         dfs(r, c - 1, weakEdges, strongEdges, rows, columns, checked);
-         dfs(r, c + 1, weakEdges, strongEdges, rows, columns, checked);
-         dfs(r + 1, c - 1, weakEdges, strongEdges, rows, columns, checked);
-         dfs(r + 1, c, weakEdges, strongEdges, rows, columns, checked);
-         dfs(r + 1, c + 1, weakEdges, strongEdges, rows, columns, checked);
+         dfs(r - 1, c - 1, weakSet, strongSet, marked, toAdd);
+         dfs(r - 1, c, weakSet, strongSet, marked, toAdd);
+         dfs(r - 1, c + 1, weakSet, strongSet, marked, toAdd);
+         dfs(r, c - 1, weakSet, strongSet, marked, toAdd);
+         dfs(r, c + 1, weakSet, strongSet, marked, toAdd);
+         dfs(r + 1, c - 1, weakSet, strongSet, marked, toAdd);
+         dfs(r + 1, c, weakSet, strongSet, marked, toAdd);
+         dfs(r + 1, c + 1, weakSet, strongSet, marked, toAdd);
       } 
    }
 
+   
    /***********************************************************************
-    * Indexing helper functions
+    * Helper methods
     ***********************************************************************/
    
    /**
@@ -335,70 +403,121 @@ public class CannyEdgeDetector {
       return columns * r + c;
    }
    
+   /**
+    * Approximates hypotenuse given two (integer) side lengths of right triangle.
+    * @param x
+    * @param y
+    * @return
+    */
+   private int hypotenuse(int x, int y) {
+      return (int) (L1norm ? Hypotenuse.L1(x, y) : Hypotenuse.L2(x, y));
+   }
+   
+   /**
+    * Finds angle tangent to edge direction given image gradient in x and y directions.
+    * @param x
+    * @param y
+    * @return
+    */
+   private NonMaximumSuppression.EdgeDirection direction(int G_x, int G_y) {
+      return NonMaximumSuppression.EdgeDirection.getDirection(G_x, G_y);
+   }
+   
 
    /***********************************************************************
     * Accessors
     ***********************************************************************/
 
-   // TODO: make comments
-   
-   public static double[][] getxKernel() {
+   /**
+    * @return convolution kernel used to calculate image gradient in x direction
+    */
+   public static double[][] getX_KERNEL() {
       return X_KERNEL;
    }
 
 
+   /**
+    * @return convolution kernel used to calculate image gradient in y direction
+    */
    public static double[][] getyKernel() {
       return Y_KERNEL;
    }
 
-
-   public double getKernelRadius() {
-      return kernelRadius;
-   }
-
-
+   /**
+    * @return whether using L1 or L2 norm to calculate distance
+    */
    public boolean isL1norm() {
       return L1norm;
    }
 
-
+   /**
+    * @return high threshold used in hysteresis (double thresholding)
+    */
    public int getHighThreshold() {
       return highThreshold;
    }
 
-
+   /**
+    * @return low threshold used in hysteresis (double thresholding)
+    */
    public int getLowThreshold() {
       return lowThreshold;
    }
 
-
+   /**
+    * @return edges detected by Canny Edge Detector
+    */
    public boolean[][] getEdges() {
       return edges;
    }
 
-
+   /**
+    * @return weak edges detected in hysteresis step
+    */
    public boolean[][] getStrongEdges() {
       return strongEdges;
    }
 
-
+   /**
+    * @return strong edges detected in hysteresis step
+    */
    public boolean[][] getWeakEdges() {
       return weakEdges;
    }
 
-
+   /**
+    * @return # of edge pixels detected by Canny Edge Detector
+    */
    public int getNumEdgePixels() {
       return numEdgePixels;
    }
 
-
+   /**
+    * @return # of strong edge pixels detected by Canny Edge Detector
+    */
    public int getStrongEdgePixels() {
-      return strongEdgePixels;
+      return numStrongEdgePixels;
    }
 
-
+   /**
+    * @return # of weak edge pixels detected by Canny Edge Detector
+    */
    public int getWeakEdgePixels() {
-      return weakEdgePixels;
+      return numWeakEdgePixels;
+   }
+   
+   /**
+    * @return # of rows in edges image. (Slightly smaller than original image because of convolutions)
+    */
+   public int getRows() {
+      return rows;
+   }
+   
+   /**
+    * @return # of columns in edges image. (Slightly smaller than original image because of convolutions)
+    */
+   public int getColumns() {
+      return columns;
    }
    
 
@@ -410,12 +529,17 @@ public class CannyEdgeDetector {
    public static void main(String[] args) throws IOException {
       // read image and get pixels
       String img = args[0]; 
+      img = "wikipedia_house.jpg";
       BufferedImage originalImage = ImageIO.read(new File(img));
       int[][] pixels = Grayscale.imgToGrayPixels(originalImage);
 
       // run SobelEdgeDetector
       final long startTime = System.currentTimeMillis();
-      CannyEdgeDetector canny = new CannyEdgeDetector(pixels, -1);
+      CannyEdgeDetector canny = new CannyEdgeDetector.Builder(pixels)
+                                                     .minEdgeSize(10)
+                                                     .thresholds(10, 20)
+                                                     .L1norm(false)
+                                                     .build();
       final long endTime = System.currentTimeMillis();
 
       // print timing information

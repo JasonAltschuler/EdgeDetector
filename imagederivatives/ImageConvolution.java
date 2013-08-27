@@ -24,7 +24,6 @@
 
 package edgedetector.imagederivatives;
 
-import edgedetector.util.GaussianKernel;
 
 // TODO: rename stuff (e.g. smoothedImage data structure)
 public class ImageConvolution {
@@ -34,7 +33,7 @@ public class ImageConvolution {
     **********************************************************************/
    private int[][] image;          // original image
    private double[][] kernel;      // Gaussian kernel
-   private int[][] smoothedImage;  // final answer
+   private int[][] convolvedImage;  // final answer
 
    private int M;                  // # of rows in original image
    private int N;                  // # of columns in original image
@@ -53,7 +52,7 @@ public class ImageConvolution {
       this.N = image[0].length;
       this.m = kernel.length;
       this.n = kernel[0].length;
-      this.smoothedImage = new int[M - m + 1][N - n + 1];
+      this.convolvedImage = new int[M - m + 1][N - n + 1];
 
       // convolve image with smoother
       convolve();
@@ -71,15 +70,14 @@ public class ImageConvolution {
     */
    private void convolve() {
       double smoothed;
-      for (int i = 0; i < smoothedImage.length; i++) {
-         for (int j = 0; j < smoothedImage[0].length; j++) {
+      for (int i = 0; i < convolvedImage.length; i++) {
+         for (int j = 0; j < convolvedImage[0].length; j++) {
             smoothed = 0;
             for (int k = 0; k < m; k++)
                for (int l = 0; l < n; l++)
                   smoothed += kernel[k][l] * image[i + k][j + l];
 
-            smoothedImage[i][j] = (smoothed > 255) ? 255 : (smoothed < 0) ? 0 : (int) smoothed;
-           
+            convolvedImage[i][j] = (smoothed > 255) ? 255 : (smoothed < 0) ? 0 : (int) smoothed; 
          }
       }
    }
@@ -91,8 +89,8 @@ public class ImageConvolution {
    
    // TODO: add comments
    
-   public int[][] getImageConvolution() {
-      return smoothedImage;
+   public int[][] getConvolvedImage() {
+      return convolvedImage;
    }
 
 
@@ -103,11 +101,6 @@ public class ImageConvolution {
 
    public double[][] getKernel() {
       return kernel;
-   }
-
-
-   public int[][] getSmoothedImage() {
-      return smoothedImage;
    }
 
 
@@ -141,12 +134,12 @@ public class ImageConvolution {
                        {4, 5, 6,},
                        {7, 8, 9}};
 
-      double[][] kernel = GaussianKernel.averagingKernel(2, 2);
+      double[][] kernel = ConvolutionKernel.averagingKernel(2, 2);
 
       // TODO: timing
       // run Gaussian smoother and get result
       ImageConvolution gs = new ImageConvolution(image, kernel);
-      int[][] smoothedImage = gs.getImageConvolution();
+      int[][] smoothedImage = gs.getConvolvedImage();
 
       // print result for visualization
       for (int i = 0; i < smoothedImage.length; i++) {

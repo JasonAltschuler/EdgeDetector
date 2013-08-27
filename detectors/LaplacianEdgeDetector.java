@@ -70,14 +70,14 @@ public class LaplacianEdgeDetector {
             gaussianKernel[i][j] /= 159.0;
             
       ImageConvolution gaussianConvolution = new ImageConvolution(image, gaussianKernel);
-      int[][] smoothedImage = gaussianConvolution.getImageConvolution();
+      int[][] smoothedImage = gaussianConvolution.getConvolvedImage();
       
       
       // apply convolutions to original image
       ImageConvolution ic = new ImageConvolution(smoothedImage, kernel);
 
       // calculate magnitude of gradients
-      int[][] smoothed = ic.getImageConvolution();
+      int[][] smoothed = ic.getConvolvedImage();
       int rows = smoothed.length;
       int columns = smoothed[0].length;
       
