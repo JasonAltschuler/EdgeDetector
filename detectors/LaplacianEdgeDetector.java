@@ -25,10 +25,11 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-import edgedetector.imagederivatives.ImageConvolution;
-import grayscale.Grayscale;
 import ui.ImageViewer;
 import util.Threshold;
+import edgedetector.imagederivatives.ConvolutionKernel;
+import edgedetector.imagederivatives.ImageConvolution;
+import grayscale.Grayscale;
 
 
 public class LaplacianEdgeDetector {
@@ -59,36 +60,26 @@ public class LaplacianEdgeDetector {
     * @param image
     */
    public LaplacianEdgeDetector(int[][] image) {
-      // TODO: don't hardcode here
-      double[][] gaussianKernel = {{2, 4, 5, 4, 2},  // this is the kernel from the Wikipedia page on Canny Edge Detection
-                                   {4, 9, 12, 9, 4}, 
-                                   {5, 12, 15, 12, 5}, 
-                                   {4, 9, 12, 9, 4}, 
-                                   {2, 4, 5, 4, 2}};
-      for (int i = 0; i < 5; i++) 
-         for (int j = 0; j < 5; j++)
-            gaussianKernel[i][j] /= 159.0;
-            
-      ImageConvolution gaussianConvolution = new ImageConvolution(image, gaussianKernel);
+      // convolve image with Gaussian kernel
+      ImageConvolution gaussianConvolution = new ImageConvolution(image, ConvolutionKernel.GAUSSIAN_KERNEL);
       int[][] smoothedImage = gaussianConvolution.getConvolvedImage();
       
-      
-      // apply convolutions to original image
+      // apply convolutions to smoothed image
       ImageConvolution ic = new ImageConvolution(smoothedImage, kernel);
 
       // calculate magnitude of gradients
-      int[][] smoothed = ic.getConvolvedImage();
-      int rows = smoothed.length;
-      int columns = smoothed[0].length;
+      int[][] convolvedImage = ic.getConvolvedImage();
+      int rows = convolvedImage.length;
+      int columns = convolvedImage[0].length;
       
       // calculate threshold intensity to be edge
-      threshold = Threshold.calcThresholdEdges(smoothed);
+      threshold = Threshold.calcThresholdEdges(convolvedImage);
 
       // threshold image to find edges
       edges = new boolean[rows][columns];
       for (int i = 0; i < rows; i++)
          for (int j = 0; j < columns; j++)
-            edges[i][j] = Math.abs(smoothed[i][j]) == 0.0;
+            edges[i][j] = Math.abs(convolvedImage[i][j]) == 0.0;
         
    }
    

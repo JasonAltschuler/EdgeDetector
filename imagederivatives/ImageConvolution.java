@@ -13,19 +13,12 @@
  * an image, which reduces noise in an image, although it is also makes
  * edges less well-defined.
  * 
- * Essentially, makes new image with each pixel intensity a linear 
- * combination of the pixel intensities around it in the original image.
+ * Essentially, expresses each pixel intensity as a linear combination
+ * of the pixel intensities around it.
  *************************************************************************/
-
-// TODO: use the following as a reference/resource
-// http://homepages.inf.ed.ac.uk/rbf/HIPR2/convolve.htm
-
-// TODO: reconcile this with ImageGradient?
 
 package edgedetector.imagederivatives;
 
-
-// TODO: rename stuff (e.g. smoothedImage data structure)
 public class ImageConvolution {
 
    /***********************************************************************
@@ -54,7 +47,7 @@ public class ImageConvolution {
       this.n = kernel[0].length;
       this.convolvedImage = new int[M - m + 1][N - n + 1];
 
-      // convolve image with smoother
+      // convolve image with kernel
       convolve();
    }
 
@@ -77,6 +70,7 @@ public class ImageConvolution {
                for (int l = 0; l < n; l++)
                   smoothed += kernel[k][l] * image[i + k][j + l];
 
+            // round off if not between 0 and 255, inclusive
             convolvedImage[i][j] = (smoothed > 255) ? 255 : (smoothed < 0) ? 0 : (int) smoothed; 
          }
       }
@@ -87,68 +81,52 @@ public class ImageConvolution {
     * Accessors
     **********************************************************************/
    
-   // TODO: add comments
-   
+   /**
+    * @return convolvedImage
+    */
    public int[][] getConvolvedImage() {
       return convolvedImage;
    }
 
-
+   /**
+    * @return original image
+    */
    public int[][] getImage() {
       return image;
    }
 
-
+   /**
+    * @return convolution kernel
+    */
    public double[][] getKernel() {
       return kernel;
    }
 
-
+   /**
+    * @return # of rows in original image
+    */
    public int getM() {
       return M;
    }
 
-
+   /**
+    * @return # of columns in original image
+    */
    public int getN() {
       return N;
    }
 
-
+   /**
+    * @return # of rows in convolution kernel
+    */
    public int getm() {
       return m;
    }
 
-
+   /**
+    * @return # of columns in convolution kernel
+    */
    public int getn() {
       return n;
    }
-
-
-   /****************************************************
-    * Unit testing
-    ***************************************************/
-
-   public static void main(String[] args) {
-      // easy example test case
-      int[][] image = {{1, 2, 3},
-                       {4, 5, 6,},
-                       {7, 8, 9}};
-
-      double[][] kernel = ConvolutionKernel.averagingKernel(2, 2);
-
-      // TODO: timing
-      // run Gaussian smoother and get result
-      ImageConvolution gs = new ImageConvolution(image, kernel);
-      int[][] smoothedImage = gs.getConvolvedImage();
-
-      // print result for visualization
-      for (int i = 0; i < smoothedImage.length; i++) {
-         for (int j = 0; j < smoothedImage[0].length; j++) {
-            System.out.print(smoothedImage[i][j] + "\t");
-         }
-         System.out.println();
-      }
-
-   }
-
 }

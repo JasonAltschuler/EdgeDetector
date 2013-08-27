@@ -9,7 +9,14 @@
 package edgedetector.imagederivatives;
 
 public class ConvolutionKernel {
-   
+
+   // TODO: implement way to calculate generic Gaussian Kernel depending on kernel width and size
+   // convolution kernel for Gaussian smoothing / blurring (kernel width (sigma) = 1.4, kernel size = 5)
+   public static final double[][] GAUSSIAN_KERNEL = {{2/159.0, 4/159.0 , 5/159.0 , 4/159.0 , 2/159.0},
+                                                     {4/159.0, 9/159.0 , 12/159.0, 9/159.0 , 4/159.0}, 
+                                                     {5/159.0, 12/159.0, 15/159.0, 12/159.0, 5/159.0}, 
+                                                     {4/159.0, 9/159.0 , 12/159.0, 9/159.0 , 4/159.0}, 
+                                                     {2/159.0, 4/159.0 , 5/159.0 , 4/159.0 , 2/159.0}};
    
    /**
     * Generates a 1D averaging kernel with user-defined dimensions

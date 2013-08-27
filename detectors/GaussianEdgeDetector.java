@@ -3,10 +3,8 @@
  * 
  * @tags edge detection, image analysis, computer vision, AI, machine learning
  * 
- * Abstract parent class for all edge detectors that use the 1st derivative
- * (as opposed to the 2nd derivative, like Laplacian edge detectors) to 
- * find edges in images. These are: RobertsCrossEdgeDetector.java,
- * PrewittEdgeDetector.java, and SobelEdgeDetector.java
+ * Abstract parent class for PrewittEdgeDetector.java, SobelEdgeDetector.java,
+ * and RobertsCrossEdgeDetector.java
  ************************************************************************/
 
 package edgedetector.detectors;
@@ -16,7 +14,6 @@ import edgedetector.util.NonMaximumSuppression;
 import util.Hypotenuse;
 import util.Threshold;
 
-// TODO: rename 
 public abstract class GaussianEdgeDetector {
 
    /************************************************************************
@@ -69,8 +66,10 @@ public abstract class GaussianEdgeDetector {
       NonMaximumSuppression.EdgeDirection[][] angle = new NonMaximumSuppression.EdgeDirection[rows][columns];
       for (int i = 0; i < rows; i++) {
          for (int j = 0; j < columns; j++) {
-            mag[i][j] = (int) (L1norm ? Hypotenuse.L1(x_imageConvolution[i][j], y_imageConvolution[i][j]) : Hypotenuse.L2(x_imageConvolution[i][j], y_imageConvolution[i][j]));
-            angle[i][j] = NonMaximumSuppression.EdgeDirection.getDirection(x_imageConvolution[i][j], y_imageConvolution[i][j]);
+            mag[i][j] = (int) (L1norm ? Hypotenuse.L1(x_imageConvolution[i][j], y_imageConvolution[i][j]) :
+                                        Hypotenuse.L2(x_imageConvolution[i][j], y_imageConvolution[i][j]));
+            angle[i][j] = NonMaximumSuppression.EdgeDirection.getDirection(x_imageConvolution[i][j],
+                                                                           y_imageConvolution[i][j]);
          }
       }
 
@@ -88,14 +87,23 @@ public abstract class GaussianEdgeDetector {
     * Accessors
     *********************************************************************/
    
+   /**
+    * @return detected edges
+    */
    public boolean[][] getEdges() {
       return edges;
    }
 
+   /**
+    * @return threshold compared with sgradient magnitudes to find edges
+    */
    public int getThreshold() {
       return threshold;
    }
    
+   /**
+    * @return whether used L1 or L2 distance norm
+    */
    public boolean getL1norm() {
       return L1norm;
    }

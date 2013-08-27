@@ -1,9 +1,9 @@
-/*************************************************************************************
+/**************************************************************************
  * @author Jason Altschuler
  * 
  * @tags machine learning, computer vision, image analysis, edge detection, AI
  * 
- * PURPOSE: Used in ImageGradient.java and Edge Detectors
+ * PURPOSE: Used to calculate image derivatives.
  * 
  * GRADIENTS: 
  *    left               (f_n)   - (f_n-1)
@@ -11,7 +11,7 @@
  *    simple_symmetric   (f_n+1) - (f_n-1)
  *    double-symmetric   (f_n+1) - 2 * (f_n) + (f_n-1)
  *    
- *************************************************************************************/
+ *************************************************************************/
 
 package edgedetector.imagederivatives;
 

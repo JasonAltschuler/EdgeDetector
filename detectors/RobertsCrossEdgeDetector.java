@@ -1,3 +1,15 @@
+/**************************************************************************
+ * @author Jason Altschuler
+ *
+ * @tags edge detection, image analysis, computer vision, AI, machine learning
+ *
+ * PURPOSE: Edge detector
+ *
+ * ALGORITHM: RobertsCross edge detector algorithm
+ *
+ * For full documentation, see the README
+  ************************************************************************/
+
 package edgedetector.detectors;
 
 import grayscale.Grayscale;

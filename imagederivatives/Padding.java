@@ -1,9 +1,9 @@
-/*************************************************************************************
+/**************************************************************************
  * @author Jason Altschuler
  * 
  * @tags machine learning, computer vision, image analysis, edge detection, AI
  * 
- * PURPOSE: Used in ImageGradient.java and EdgeDetectors
+ * PURPOSE: Used to calculate image derivatives
  * 
  * PADDING: 
  *    zeros       0  ,  z_1,  z_2,  ...,  z_n-1,  z_n,  0
@@ -11,7 +11,7 @@
  *    symmetric   z_2,  z_1,  z_2,  ...,  z_n-1,  z_n,  z_n-1
  *    circular    z_n,  z_1,  z_2,  ...,  z_n-1,  z_n1, z_1
  *    
- *************************************************************************************/
+ *************************************************************************/
 
 package edgedetector.imagederivatives;
 

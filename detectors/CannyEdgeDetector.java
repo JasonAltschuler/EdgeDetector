@@ -36,6 +36,7 @@ import ui.ImageViewer;
 import util.CSVwriter;
 import util.Hypotenuse;
 import util.Threshold;
+import edgedetector.imagederivatives.ConvolutionKernel;
 import edgedetector.imagederivatives.ImageConvolution;
 import edgedetector.util.NonMaximumSuppression;
 import grayscale.Grayscale;
@@ -46,13 +47,6 @@ public class CannyEdgeDetector {
    /***********************************************************************
     * Static fields
     **********************************************************************/
-  
-   // convolution kernel for Gaussian smoothing / blurring (kernel width (sigma) = 1.4, kernel size = 5)
-   private static final double[][] GAUSSIAN_KERNEL = {{2/159.0, 4/159.0 , 5/159.0 , 4/159.0 , 2/159.0},
-                                                      {4/159.0, 9/159.0 , 12/159.0, 9/159.0 , 4/159.0}, 
-                                                      {5/159.0, 12/159.0, 15/159.0, 12/159.0, 5/159.0}, 
-                                                      {4/159.0, 9/159.0 , 12/159.0, 9/159.0 , 4/159.0}, 
-                                                      {2/159.0, 4/159.0 , 5/159.0 , 4/159.0 , 2/159.0}};
 
    // convolution kernels to calculate discrete image gradient (Sobel operators; same as in SobelEdgeDetector.java)
    private static final double[][] X_KERNEL = {{-1, 0 ,  1},
@@ -230,7 +224,8 @@ public class CannyEdgeDetector {
      
       //================== STEP 1: GAUSSIAN SMOOTHING ===================//
 
-      ImageConvolution gaussianConvolution = new ImageConvolution(image, GAUSSIAN_KERNEL);
+      // convolve image with Gaussian kernel
+      ImageConvolution gaussianConvolution = new ImageConvolution(image, ConvolutionKernel.GAUSSIAN_KERNEL);
       int[][] smoothedImage = gaussianConvolution.getConvolvedImage();      
       
       
@@ -529,7 +524,6 @@ public class CannyEdgeDetector {
    public static void main(String[] args) throws IOException {
       // read image and get pixels
       String img = args[0]; 
-      img = "wikipedia_house.jpg";
       BufferedImage originalImage = ImageIO.read(new File(img));
       int[][] pixels = Grayscale.imgToGrayPixels(originalImage);
 
@@ -537,7 +531,7 @@ public class CannyEdgeDetector {
       final long startTime = System.currentTimeMillis();
       CannyEdgeDetector canny = new CannyEdgeDetector.Builder(pixels)
                                                      .minEdgeSize(10)
-                                                     .thresholds(10, 20)
+                                                     .thresholds(5, 15)
                                                      .L1norm(false)
                                                      .build();
       final long endTime = System.currentTimeMillis();

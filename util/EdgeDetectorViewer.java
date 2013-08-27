@@ -1,6 +1,8 @@
-/**
+/**************************************************************************
  * @author Jason Altschuler
- **/
+ * 
+ * Displays results of a few edge detectors.
+ *************************************************************************/
 
 package edgedetector.util;
 

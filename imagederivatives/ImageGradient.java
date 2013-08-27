@@ -3,7 +3,7 @@
  * 
  * @tags machine learning, computer vision, image analysis, edge detection, AI
  * 
- * PURPOSE: Calculates gradient of image. Used in CannyEdgeDetector.java
+ * PURPOSE: Calculates discrete derivative of image.
  * 
  * GRADIENTS: 
  *    left               (f_n)   - (f_n-1)
@@ -18,8 +18,6 @@
  *    circular    z_n,  z_1,  z_2,  ...,  z_n-1,  z_n1, z_1
  *    
  **************************************************************************/
-
-// TODO: make images double[][] --> int[][]
 
 package edgedetector.imagederivatives;
 
