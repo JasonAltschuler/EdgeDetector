@@ -1,10 +1,12 @@
-/****************************************************************
+/**************************************************************************
  * @author Jason Altschuler
  *
  * @tags Machine learning, computer vision, image processing, image
  * analysis, Fourier Transforms
  *
- * PURPOSE: Applies discrete Fourier transform (convolution kernel) to image.
+ * PURPOSE: Applies discrete 2D Fourier transform (convolution kernel) to image.
+ * 
+ * OVERVIEW: Writes each pixel intensity as linear combo of itself and its neighbors.
  * 
  * Useful for image convolutions (also called applying image filters),
  * especially Gaussian smoothing (also called Gaussian blurring) of
@@ -13,7 +15,7 @@
  * 
  * Essentially, makes new image with each pixel intensity a linear 
  * combination of the pixel intensities around it in the original image.
- ****************************************************************/
+ *************************************************************************/
 
 // TODO: use the following as a reference/resource
 // http://homepages.inf.ed.ac.uk/rbf/HIPR2/convolve.htm
@@ -27,9 +29,9 @@ import edgedetector.util.GaussianKernel;
 // TODO: rename stuff (e.g. smoothedImage data structure)
 public class ImageConvolution {
 
-   /****************************************************
+   /***********************************************************************
     * Fields
-    ***************************************************/
+    **********************************************************************/
    private int[][] image;          // original image
    private double[][] kernel;      // Gaussian kernel
    private int[][] smoothedImage;  // final answer
@@ -39,9 +41,10 @@ public class ImageConvolution {
    private int m;                  // # of rows in kernel
    private int n;                  // # of columns in kernel
 
-   /****************************************************
+   
+   /***********************************************************************
     * Constructor
-    ***************************************************/
+    **********************************************************************/
    public ImageConvolution(int[][] image, double[][] kernel) {
       // set fields
       this.image = image;
@@ -56,41 +59,75 @@ public class ImageConvolution {
       convolve();
    }
 
+   
+   /***********************************************************************
+    * Convolution
+    **********************************************************************/
 
-   /****************************************************
-    * Convolving
-    ***************************************************/
-
+   /**
+    * Discretized 2D Fourier Transform.
+    * <P> Write each pixel intensity as linear combo of 
+    * itself and its neighbors.
+    */
    private void convolve() {
       double smoothed;
       for (int i = 0; i < smoothedImage.length; i++) {
          for (int j = 0; j < smoothedImage[0].length; j++) {
-            // for each pixel in smoothedImage
             smoothed = 0;
-            for (int k = 0; k < m; k++) {
-               for (int l = 0; l < n; l++) {
+            for (int k = 0; k < m; k++)
+               for (int l = 0; l < n; l++)
                   smoothed += kernel[k][l] * image[i + k][j + l];
-               }
-            }
-            // smoothedImage[i][j] = (smoothed < 255) ? (((int) smoothed > 0) ? smoothed : 0) : 255;
-            if (smoothed < 255) {
-               if (smoothed > 0)
-                  smoothedImage[i][j] = (int) smoothed;
-               else
-                  smoothedImage[i][j] = 0;
-            } else {
-               smoothedImage[i][j] = 255;
-            }
+
+            smoothedImage[i][j] = (smoothed > 255) ? 255 : (smoothed < 0) ? 0 : (int) smoothed;
+           
          }
       }
    }
 
-
-   /****************************************************
+   
+   /***********************************************************************
     * Accessors
-    ***************************************************/
+    **********************************************************************/
+   
+   // TODO: add comments
+   
    public int[][] getImageConvolution() {
       return smoothedImage;
+   }
+
+
+   public int[][] getImage() {
+      return image;
+   }
+
+
+   public double[][] getKernel() {
+      return kernel;
+   }
+
+
+   public int[][] getSmoothedImage() {
+      return smoothedImage;
+   }
+
+
+   public int getM() {
+      return M;
+   }
+
+
+   public int getN() {
+      return N;
+   }
+
+
+   public int getm() {
+      return m;
+   }
+
+
+   public int getn() {
+      return n;
    }
 
 
