@@ -99,6 +99,12 @@ public class RobertsCrossEdgeDetector extends GaussianEdgeDetector {
     * @throws IOException 
     *********************************************************************/
 
+   /**
+    * Example run. 
+    * <P> Displays detected edges next to orignal image.
+    * @param args
+    * @throws IOException
+    */
    public static void main(String[] args) throws IOException {
       // read image and get pixels
       String img = args[0];

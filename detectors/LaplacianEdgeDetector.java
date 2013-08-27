@@ -126,8 +126,9 @@ public class LaplacianEdgeDetector {
     *********************************************************************/
    
    /**
-    * 
-    * @param imageFile
+    * Example run. 
+    * <P> Displays detected edges next to orignal image.
+    * @param args
     * @throws IOException
     */
    public static void main(String[] args) throws IOException {
