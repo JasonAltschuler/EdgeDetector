@@ -65,6 +65,21 @@ public class PrewittEdgeDetector extends GaussianEdgeDetector {
    
    /**
     * All work is done in constructor.
+    * @param filePath path to image
+    */
+   public PrewittEdgeDetector(String filePath) {
+      // read image and get pixels
+      BufferedImage originalImage;
+      try {
+         originalImage = ImageIO.read(new File(filePath));
+         findEdges(Grayscale.imgToGrayPixels(originalImage), false);
+      } catch (IOException e) {
+         e.printStackTrace();
+      }
+   }
+   
+   /**
+    * All work is done in constructor.
     * <P> Uses L2 norm by default.
     * @param imageld
     */

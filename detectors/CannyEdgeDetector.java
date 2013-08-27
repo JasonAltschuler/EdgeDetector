@@ -16,7 +16,7 @@
  *       1. Gaussian smoothing / Gaussian blurring (for noise reduction)
  *       2. Calculate magnitude of gradient and edge angle for each pixel
  *       3. Non-maximum suppression (removes false edges)
- *       4. Hysteresis  ing (calculate two thresholds --> weak and strong edges)
+ *       4. Hysteresis (calculate two thresholds --> weak and strong edges)
  *       5. Edge tracing (keep strong edges and all weak edges connected to strong edges)
  **************************************************************************/
 

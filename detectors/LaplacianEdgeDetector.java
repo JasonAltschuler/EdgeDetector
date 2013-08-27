@@ -53,6 +53,22 @@ public class LaplacianEdgeDetector {
    /***********************************************************************
     * Detect edges
     ***********************************************************************/
+
+   /**
+    * All work is done in constructor.
+    * @param filePath path to image
+    */
+   public LaplacianEdgeDetector(String filePath) {
+      // read image and get pixels
+      BufferedImage originalImage;
+      try {
+         originalImage = ImageIO.read(new File(filePath));
+         findEdges(Grayscale.imgToGrayPixels(originalImage));
+      } catch (IOException e) {
+         e.printStackTrace();
+      }
+   }
+
    
    /**
     * Find beautiful edges.
@@ -60,10 +76,19 @@ public class LaplacianEdgeDetector {
     * @param image
     */
    public LaplacianEdgeDetector(int[][] image) {
+      findEdges(image);
+   }
+
+   
+   /**
+    * Finds only the most beautiful edges. 
+    * @param image
+    */
+   private void findEdges(int[][] image) {
       // convolve image with Gaussian kernel
       ImageConvolution gaussianConvolution = new ImageConvolution(image, ConvolutionKernel.GAUSSIAN_KERNEL);
       int[][] smoothedImage = gaussianConvolution.getConvolvedImage();
-      
+
       // apply convolutions to smoothed image
       ImageConvolution ic = new ImageConvolution(smoothedImage, kernel);
 
@@ -80,7 +105,6 @@ public class LaplacianEdgeDetector {
       for (int i = 0; i < rows; i++)
          for (int j = 0; j < columns; j++)
             edges[i][j] = Math.abs(convolvedImage[i][j]) == 0.0;
-        
    }
    
    
