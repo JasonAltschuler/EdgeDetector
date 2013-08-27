@@ -1,41 +1,77 @@
-// TODO: actually write something useful
-
 /**********************************************************************
 * @author Jason Altschuler
 *
-* Description of EdgeDetectors
+* Description of EdgeDetectors repo
 **********************************************************************/
+
 
   ** PURPOSE: Detect edges in images 
 
-  ** OVERVIEW OF ALGORITHM(S): This repo actually has many (> 5 and growing)
-   different edge detection algorithms. These can all  be roughly subclassed
-   into broad categories:
-      1. Gaussian Edge Detection: use 1st derivatives. 
-           Roughly: find (i, j) s.t.|f'(i, j) > Threshold
-      2. Laplacian Edge Detection: use 2nd derivatives
-           Roughly: find (i, j) s.t. |f''(i, j)| ~= 0 // TODO: check this
-   In general, edges are (often) the pixels where the sharpest
-   increase or decrease in intensity are found.
 
-  ** OVERVIEW:
-// TODO: provide in-depth descriptions of each algorithm
+  ** ALGORITHMS: This repo contains 5 different edge detection algorithms:
 
+      1. Canny edge detector (also commonly called the "optimal edge detector")
+      2. Laplacian edge detector
+      3. Sobel edge detector 
+      4. Prewitt edge detector
+      5. Roberts Cross edge detector
 
-// TODO: provide description of parameters, data structures, and output
+   The Laplacian edge detector looks for zeros in the 2nd derivative,
+   whereas the Sobel, Prewitt, and Roberts Cross edge detectors (which 
+   are all very similar) all look for large values of the 1st derivative. 
+   Derivatives here are discrete image gradients. 
 
 
-  ** EXAMPLE RUN:
-String filePath = User.provideImage();          // you need to provide
+  ** OVERVIEW: 
 
-SobelEdgeDetector sed = new SobelEdgeDetector(filePath);
+   The standard CV definition of edge is:
+      1. Where change in intensity is very positive (first derivative is large)
+      2. One-pixel thick
+   
+   To achieve part 1 of the edge definition, Canny, Sobel, Prewitt, and Roberts
+   (all but Laplacian) all use discrete kernel convolutions (discrete 
+   approximations of 2D Fourier Transforms) to calculate the first
+   derivative of the image in each direction. They then calculate the
+   magnitude of the gradient and find pixels where this value is high. 
 
-boolean[][] edges = sed.getEdges();             // get the edges
+   In contrast, Laplacian uses discrete kernel convolutions to approximate
+   the second derivative, and identifies pixels where this is 0. However,
+   in practice, this often also identifies false edges because it 
+   finds local extrema in 1st derivative (so local min as well as local max). 
 
-User.do_something_awesome_with_the_data();      // enjoy!
+   To achieve part 2 of the edge definition, all 5 of the edge detectors
+   apply non-maximum suppression. Essentially, for each pixel that has
+   passed the above tests, find the angle tangent to the edge direction and
+   round it to the nearest 45 degrees. If either of the pixel's neighbors
+   have a higher gradient magnitude, suppress the original pixel. This
+   ensures that the edges are one-pixel thick. 
+
+   In addition, Canny and Laplacian both apply Gaussian smoothing (also 
+   called Gaussian blurring) in the beginning to reduce noise. Essentially,
+   this applies a Gaussian filter to the image, expressing each pixel's
+   intensity as a weighted linear combination of its neighbors and itself. 
+   This reduces noise, but also makes the edges less precise. 
+
+   Canny, which is by far the most involved edge detection algorithm, 
+   has a few extra steps. After Gaussian blurring, calculating the 
+   gradient magnitudes and edge angles, and non-maximum suppression,
+   we then perform hysteresis and edge tracing. Essentially, hysteresis 
+   is double thresholding. We automatically calculate a low and high
+   threshold (by performing KMeans++ with 3 clusters in 1 dimension).
+   Edges with gradient magnitude > high threshold are strong edges.
+   Edges with gradient magnitude between low and high threshold are weak edges.
+
+   The strong edges are guaranteed to be edges, but the weak edges
+   are only considered edges if they are connected a strong edge. 
+   This is performed by a simple depth-first search. 
+
+   An improvement to Canny that is implemented here is that we can
+   discard edges which consist of few pixels (this is a user-defined 
+   input parameter). 
 
 
-  ** SUGGESTED READINGS: // TODO
-   1. 
-   2.
-   3.
+
+  ** EXAMPLE RUNS: There are full examples in the main method of each
+   edge detector java file (CannyEdgeDetector.java, SobelEdgeDetector.java, etc.)
+   There is also another example in EdgeDetectorViewer.java
+
