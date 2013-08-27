@@ -16,10 +16,7 @@
       4. Prewitt edge detector
       5. Roberts Cross edge detector
 
-   The Laplacian edge detector looks for zeros in the 2nd derivative,
-   whereas the Sobel, Prewitt, and Roberts Cross edge detectors (which 
-   are all very similar) all look for large values of the 1st derivative. 
-   Derivatives here are discrete image gradients. 
+   3, 4, and 5 are all very similar. Descriptions of each algorithm below. 
 
 
   ** OVERVIEW: 
@@ -30,21 +27,21 @@
    
    To achieve part 1 of the edge definition, Canny, Sobel, Prewitt, and Roberts
    (all but Laplacian) all use discrete kernel convolutions (discrete 
-   approximations of 2D Fourier Transforms) to calculate the first
+   approximations of 2D Fourier Transforms) to calculate the image's first
    derivative of the image in each direction. They then calculate the
    magnitude of the gradient and find pixels where this value is high. 
 
    In contrast, Laplacian uses discrete kernel convolutions to approximate
-   the second derivative, and identifies pixels where this is 0. However,
+   the image's second derivative, and identifies pixels where this is 0. However,
    in practice, this often also identifies false edges because it 
    finds local extrema in 1st derivative (so local min as well as local max). 
 
    To achieve part 2 of the edge definition, all 5 of the edge detectors
-   apply non-maximum suppression. Essentially, for each pixel that has
+   also apply non-maximum suppression. Essentially, for each pixel that has
    passed the above tests, find the angle tangent to the edge direction and
-   round it to the nearest 45 degrees. If either of the pixel's neighbors
-   have a higher gradient magnitude, suppress the original pixel. This
-   ensures that the edges are one-pixel thick. 
+   round it to the nearest 45 degrees. If either of the pixel's two neighbors
+   in that direction have a higher gradient magnitude, suppress the original
+   pixel. This ensures that the detected edges are always one-pixel thick. 
 
    In addition, Canny and Laplacian both apply Gaussian smoothing (also 
    called Gaussian blurring) in the beginning to reduce noise. Essentially,
@@ -66,12 +63,12 @@
    This is performed by a simple depth-first search. 
 
    An improvement to Canny that is implemented here is that we can
-   discard edges which consist of few pixels (this is a user-defined 
-   input parameter). 
-
+   discard edges which consist of few pixels (the exact number is a 
+   user-defined input parameter). 
 
 
   ** EXAMPLE RUNS: There are full examples in the main method of each
    edge detector java file (CannyEdgeDetector.java, SobelEdgeDetector.java, etc.)
    There is also another example in EdgeDetectorViewer.java
 
+  ** DEMOS: See the screenshots in the folder: demos/
