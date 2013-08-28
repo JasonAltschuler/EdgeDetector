@@ -22,12 +22,13 @@ public class ConvolutionKernel {
     * Generates a 1D averaging kernel with user-defined dimensions
     */
    public static double[] averagingKernel(int r) {
-     double[] kernel = new double[r];
+      double[] kernel = new double[r];
+      double entry = 1.0 / r; 
 
-     for (int i = 0; i < r; i++) 
-       kernel[i] = 1;
-     
-     return kernel;
+         for (int i = 0; i < r; i++) 
+            kernel[i] = entry;
+
+      return kernel;
    } 
 
 
@@ -36,10 +37,11 @@ public class ConvolutionKernel {
     */
    public static double[][] averagingKernel(int r, int c) {
       double[][] kernel = new double[r][c];
+      double entry = 1.0 / (r * c);
 
       for (int i = 0; i < r; i++)
          for (int j = 0; j < c; j++)
-            kernel[i][j] = 1;
+            kernel[i][j] = entry;
 
       return kernel;
    }
