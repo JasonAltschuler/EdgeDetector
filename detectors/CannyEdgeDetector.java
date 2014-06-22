@@ -530,6 +530,7 @@ public class CannyEdgeDetector {
    public static void main(String[] args) throws IOException {
       // read image and get pixels
       String img = args[0]; 
+      img = "dzeng2.jpg";
       BufferedImage originalImage = ImageIO.read(new File(img));
       int[][] pixels = Grayscale.imgToGrayPixels(originalImage);
 
@@ -537,7 +538,7 @@ public class CannyEdgeDetector {
       final long startTime = System.currentTimeMillis();
       CannyEdgeDetector canny = new CannyEdgeDetector.Builder(pixels)
                                                      .minEdgeSize(10)
-                                                     .thresholds(5, 15)
+                                                     .thresholds(15, 35)
                                                      .L1norm(false)
                                                      .build();
       final long endTime = System.currentTimeMillis();

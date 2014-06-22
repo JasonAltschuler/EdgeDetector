@@ -7,8 +7,9 @@
  *
  * ALGORITHM: Laplacian edge detector algorithm
  * 
- * Finds edges by finding pixel intensities where the 2nd derivative
- * (discrete image derivative found by image convolutions) is 0. However, 
+ * Finds edges by finding pixel intensities where the Laplacian operator
+ * (divergence of gradient; 2nd order differential operator) is 0.
+ * (Discrete image derivative found by image convolutions).  However, 
  * this method historically has been replaced by Sobel, Canny, etc. because 
  * it finds many false edges. The reason is that 2nd derivative could mean
  * a local min or max of first derivative. We only want the max's;

@@ -21,18 +21,19 @@
 
   ** OVERVIEW: 
 
-   The standard CV definition of edge is:
-      1. Where change in intensity is very positive (first derivative is large)
+  Standard computer vision definition of "edge" is:
+      1. Where change in intensity is very large (first derivative is large)
       2. One-pixel thick
    
    To achieve part 1 of the edge definition, Canny, Sobel, Prewitt, and Roberts
-   (all but Laplacian) all use discrete kernel convolutions (discrete 
-   approximations of 2D Fourier Transforms) to calculate the image's first
-   derivative of the image in each direction. They then calculate the
-   magnitude of the gradient and find pixels where this value is high. 
+   (all but Laplacian) all use convolutions (discrete approximations of 2D 
+   Fourier Transforms) to calculate the image's first derivative of the image
+   in each direction. They then calculate the magnitude of the gradient and
+   find pixels where this value is high. 
 
-   In contrast, Laplacian uses discrete kernel convolutions to approximate
-   the image's second derivative, and identifies pixels where this is 0. However,
+   In contrast, Laplacian uses kernel convolutions to approximate
+   the image's second derivative (Laplacian operator is divergence of 
+   gradient), and identifies pixels where this is 0. However,
    in practice, this often also identifies false edges because it 
    finds local extrema in 1st derivative (so local min as well as local max). 
 
@@ -45,8 +46,8 @@
 
    In addition, Canny and Laplacian both apply Gaussian smoothing (also 
    called Gaussian blurring) in the beginning to reduce noise. Essentially,
-   this applies a Gaussian filter to the image, expressing each pixel's
-   intensity as a weighted linear combination of its neighbors and itself. 
+   this applies a smoothing filter to the image by replacing each pixel's
+   intensity with a weighted linear combination of its neighbors and itself. 
    This reduces noise, but also makes the edges less precise. 
 
    Canny, which is by far the most involved edge detection algorithm, 
@@ -55,12 +56,12 @@
    we then perform hysteresis and edge tracing. Essentially, hysteresis 
    is double thresholding. We automatically calculate a low and high
    threshold (by performing KMeans++ with 3 clusters in 1 dimension).
-   Edges with gradient magnitude > high threshold are strong edges.
-   Edges with gradient magnitude between low and high threshold are weak edges.
+   Edges with gradient magnitude > high threshold are termed "strong edges."
+   Edges with gradient magnitude between low and high threshold are "weak edges."
 
    The strong edges are guaranteed to be edges, but the weak edges
    are only considered edges if they are connected a strong edge. 
-   This is performed by a simple depth-first search. 
+   This is performed by a simple depth-first search ("edge-tracing"). 
 
    An improvement to Canny that is implemented here is that we can
    discard edges which consist of few pixels (the exact number is a 
